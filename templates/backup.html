@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/favicon-310.png">
+    <style>
+    * {
+      box-sizing: border-box;
+    }
+    .menu {
+      float: left;
+      width: 20%;
+    }
+    .menuitem {
+      padding: 8px;
+      margin-top: 7px;
+      border-bottom: 1px solid #f1f1f1;
+    }
+    .main {
+      float: left;
+      width: 60%;
+      padding: 0 20px;
+      overflow: hidden;
+    }
+    .right {
+      background-color: lightblue;
+      float: left;
+      width: 20%;
+      padding: 10px 15px;
+      margin-top: 7px;
+    }
+
+    @media only screen and (max-width:800px) {
+      /* For tablets: */
+      .main {
+        width: 80%;
+        padding: 0;
+      }
+      .right {
+        width: 100%;
+      }
+    }
+    @media only screen and (max-width:500px) {
+      /* For mobile phones: */
+      .menu, .main, .right {
+        width: 100%;
+      }
+    }
+    </style>
+
+    <title>
+      Chat Anonymously Within Your Campus!
+    </title>
+
+  </head>
+
+  <body background="/static/back.jpg">
+      <div align="center" style="background-color:#f1f1f1;opacity:0.8;padding:10px;">
+          <h1>
+            <img src="/static/favicon-32.png">
+            AnonChat
+            <br>
+          </h1>
+        </div>
+
+      <div class="message_holder"></div>
+
+      <form action="" method="POST">
+        <input type="text" class="message" placeholder="Messages"/>
+        <input type="submit"/>
+      </form>
+
+
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+      <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on( 'connect', function() {
+          socket.emit( 'handshake', {
+            data: 'User Connected'
+          } )
+
+          var form = $( 'form' ).on( 'submit', function( e ) {
+            e.preventDefault()
+            let user_input = $( 'input.message' ).val()
+            socket.emit('my event', user_input)
+            $( 'input.message' ).val( '' ).focus()
+          } )
+        } )
+        socket.on( 'my response', function( msg ) {
+          console.log( msg )
+          $( 'div.message_holder' ).append( '<div><b style="color: #000">'+'</b> '+msg+'</div>' )
+        })
+      </script>
+
+  </body>
+  </html>

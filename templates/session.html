@@ -1,0 +1,169 @@
+<!Doctype html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<script type="text/javascript">
+  var identity= "";
+</script>
+
+  <html lang="en">
+  
+  <head>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/static/icon512.png">
+    <title>
+      Chat Anonymously Within Your Campus!
+    </title>
+    <style>
+    * {
+      box-sizing: border-box;
+    }
+    .menu {
+      float: left;
+      width: 20%;
+    }
+    .menuitem {
+      padding: 8px;
+      margin-top: 7px;
+      border-bottom: 1px solid #f1f1f1;
+    }
+    .main {
+      float: left;
+      width: 60%;
+      padding: 0 20px;
+      overflow: hidden;
+    }
+    .right {
+      background-color: lightblue;
+      float: left;
+      width: 20%;
+      padding: 10px 15px;
+      margin-top: 7px;
+    }
+
+    @media only screen and (max-width:800px) {
+      /* For tablets: */
+      .main {
+        width: 80%;
+        padding: 0;
+      }
+      .right {
+        width: 100%;
+      }
+    }
+    @media only screen and (max-width:500px) {
+      /* For mobile phones: */
+      .menu, .main, .right {
+        width: 100%;
+      }
+    }
+    </style>
+  </head>
+
+  <body background="/static/back.jpg">
+    
+    <div align="center" style="background-color:#f1f1f1;opacity:0.9;padding:10px;">
+        <h1>
+          <img src="/static/icon36.png">AnonChat
+        </h1>
+        <br>
+    </div>
+
+    <br>
+
+    <p id="demo" align="center" style="color:#003609;"></p>
+    <script type="text/javascript">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on('usersResponse', function(users){
+        document.getElementById("demo").innerHTML= "Active Users: "+(users.toString());
+      })
+    </script>
+
+    <br>
+
+    <div class="message_holder" align="center" style="background-color:#c9eabf;opacity:0.7;padding:15px;"></div>
+
+    <br>
+
+    <div align="center">
+      <form action="" method="post">
+        <input type="text" class="message" placeholder="Type your message here('<'&'>' not allowed)" size=45/>
+        <br>
+        <input type="submit" value= "send"/>
+      </form>
+    </div>
+
+    <br>
+
+    <div align="center">
+      <button type="submit" onClick="refreshPage()">Rejoin Chat!</button>
+      <script type="text/javascript">
+        function refreshPage(){
+          window.location.reload();
+        } 
+      </script>
+    </div>
+
+    <br>
+
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on( 'connect', function() {
+          socket.emit( 'handshake', {
+            data: 'User Connected'
+          })
+          socket.emit('users', {});
+
+          var form = $( 'form' ).on( 'submit', function( e ) {
+            e.preventDefault()
+            let user_input = $( 'input.message' ).val()
+            userStr= user_input.toString()
+            var check =0;
+            //check for script injection
+            for(var i=0;i<userStr.length;i++){
+              if((userStr[i]=="<")||(userStr[i]==">")){
+                check= 1;
+                break;
+              }
+            }
+            if(check==1){
+              //do nothing
+              //user entered a string that
+              //contains '<' or '>' and can
+              //possibly be an exploit string
+            }
+            else{
+              //input string is safe
+              //convert input string to unicode
+              //byte array and send to the server
+              var unicodeString = '';
+              var theString= userStr;
+              for (var i=0; i < theString.length; i++) {
+                var theUnicode = theString.charCodeAt(i).toString(16).toUpperCase();
+                while (theUnicode.length < 4) {
+                  theUnicode = '0' + theUnicode;
+                }
+                theUnicode = '\\u' + theUnicode;
+                unicodeString += theUnicode;
+            }
+            socket.emit('my event', unicodeString)
+            }
+            $( 'input.message' ).val( '' ).focus()
+          } )
+        } )
+
+        socket.on( 'my response', function( msg ) {
+          var final= msg.replace(/\\u[\dA-F]{4}/gi, 
+          function (match) {
+             return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
+          });
+          var onScreen= final.toString()
+          $( 'div.message_holder' ).append( '<div>'+onScreen+'</div>' )
+        })
+    </script>
+
+  </body>
+
+
+  </html>
